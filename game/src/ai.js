@@ -18,9 +18,9 @@ export function pickRivalCard(s) {
   let best = null, bestScore = -1;
   for (const c of pool) {
     let score = c.value * 2 - c.cost;
-    if (yourLast && sigilBeats(c.sigil, yourLast)) score += 5; // counter-pick
-    if (c.value >= 9) score += 2;                             // finishers
-    score += Math.random() * 2;                               // a little nerve
+    if (yourLast && sigilBeats(c.sigil, yourLast)) score += 2; // light counter-pick
+    if (c.value >= 9) score += 1;                             // finishers
+    score += Math.random() * 3;                               // a little nerve
     if (score > bestScore) { bestScore = score; best = c; }
   }
   const idx = s.rivalHand.indexOf(best);

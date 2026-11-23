@@ -84,7 +84,7 @@
   @keyframes flipin{0%{transform:translateY(-50%) rotateY(90deg) scale(.8);} 60%{transform:translateY(-50%) rotateY(-12deg) scale(1.05);} 100%{transform:translateY(-50%) rotateY(0) scale(1);}}
   #vs{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:30px; font-weight:bold;
     color:var(--gold2); text-shadow:0 0 16px #f5c542; z-index:4;}
-  #dmg{position:absolute; left:50%; top:16px; transform:translateX(-50%); font-size:30px; font-weight:bold;
+  #dmg{position:absolute; right:14px; top:198px; width:190px; text-align:center; font-size:24px; font-weight:bold;
     color:#ff6b5e; text-shadow:0 2px 0 #000, 0 0 18px #ff6b5e88; z-index:6; display:none;}
   #dmg.show{display:block; animation:floatup 1.1s ease forwards;}
   @keyframes floatup{0%{opacity:0; margin-top:14px;} 25%{opacity:1;} 100%{opacity:0; margin-top:-16px;}}
@@ -133,6 +133,7 @@
   .callout{position:absolute; z-index:8; background:#fffbe8; color:#241040; font-size:12px; font-weight:bold;
     border:2px solid var(--gold); border-radius:8px; padding:4px 8px; box-shadow:0 2px 8px #000a; max-width:190px; line-height:1.3;}
   .callout::after{content:""; position:absolute; left:50%; bottom:-14px; width:2px; height:14px; background:var(--gold);}
+  .callout.up::after{bottom:auto; top:-14px;}
   /* ---------- overlays ---------- */
   .overlay{position:absolute; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center;
     background:radial-gradient(ellipse at 50% 40%, #3d2170ee 0%, #150829f2 100%); text-align:center; padding:20px;}
@@ -210,7 +211,7 @@
       2 · The rival commits too — its hint tells you which sigil it favours. Counter it!<br>
       3 · <b>Sigil wheel:</b> Flame beats Gale, Gale beats Stone, Stone beats Tide, Tide beats Flame (+3 power).<br>
       4 · Winner deals damage = margin + sigil bonus. Win 3 clashes in a row for a <b>Sigil Burst +6</b>.<br>
-      5 · Cards cost Focus (you gain +1 each round). First to 0 Life loses.
+      5 · Cards cost Focus (you gain +2 each round). First to 0 Life loses.
     </div>
     <button id="btnStart" style="font-size:20px; padding:12px 34px;">▶ CLICK TO BEGIN</button>
     <div style="margin-top:10px; font-size:12px; color:var(--mut);">30 Life each · Deck of 30 · Hand of 6 · Keys 1–6, Enter, R, M</div>

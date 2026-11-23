@@ -47,13 +47,13 @@ export function applyShot(shot, api) {
     const foe = { id: 'c2', name: 'Storm Wing', sigil: 'gale', value: 6, cost: 2 };
     t.youCommit = { card: you };
     t.rivalCommit = { card: foe };
-    // Flame beats Gale: 10 + 3 = 13 vs 6 → margin 7, bonus 3, damage 10.
-    t.result = { winner: 'you', margin: 7, bonus: 3, damage: 10, burst: false, youPow: 13, foePow: 6, you, foe };
+    // Flame beats Gale: 10 + 3 = 13 vs 6 → margin 7, bonus 3, capped at 8.
+    t.result = { winner: 'you', margin: 7, bonus: 3, damage: 8, burst: false, youPow: 13, foePow: 6, you, foe };
     t.phase = 'reveal';
     t.lastWinner = 'you'; t.lastMargin = 7; t.lastBonus = 3; t.lastBurst = false;
-    t.turns = 5; t.damageDealt = 22; t.damageTaken = 6; t.cardsPlayed = 5; t.clashesWon = 4;
+    t.turns = 5; t.damageDealt = 20; t.damageTaken = 6; t.cardsPlayed = 5; t.clashesWon = 4;
     t.log = [
-      'You win the clash! Inferno 13 vs 6 — 10 damage',
+      'You win the clash! Inferno 13 vs 6 — 8 damage',
       'Rival wins the clash. Quake Stomp 9 vs 7 — you take 2 damage',
       'You win the clash! Tidal Surge 11 vs 8 — 3 damage',
       'Round 6 — rival committed face-down (Gale favoured).',
@@ -61,10 +61,10 @@ export function applyShot(shot, api) {
     Object.assign(s, t);
     render(s); renderLegend();
     showCallouts([
-      { x: 300, y: 150, text: '⬆ BOTH CARDS FLIP TOGETHER — higher power wins' },
-      { x: 560, y: 60,  text: 'SIGIL STREAK ×2 — one more for Burst +6!' },
-      { x: 60,  y: 60,  text: 'RIVAL HINT: it favours Gale — counter it!' },
-      { x: 430, y: 470, text: 'YOUR HAND — big value, big cost gem, sigil shape' },
+      { x: 24, y: 165, text: 'RIVAL HINT: it favours Gale — counter it!' },
+      { x: 110, y: 218, text: '⬆ BOTH CARDS FLIP TOGETHER — higher power wins' },
+      { x: 618, y: 165, text: 'SIGIL STREAK ×2 — one more for Burst +6!' },
+      { x: 430, y: 508, text: 'YOUR HAND — big value, big cost gem, sigil shape', up: true },
     ]);
     window.__shotReady = true;
     return;
@@ -74,7 +74,7 @@ export function applyShot(shot, api) {
     t.round = 9; t.youLife = 17; t.rivalLife = 0; t.focus = 5;
     t.turns = 8; t.damageDealt = 30; t.damageTaken = 13; t.cardsPlayed = 8; t.clashesWon = 6;
     t.winner = 'you'; t.phase = 'over';
-    t.log = ['You win the clash! Inferno 13 vs 6 — 10 damage', 'The rival falls to 0 Life!'];
+    t.log = ['You win the clash! Inferno 13 vs 6 — 8 damage', 'The rival falls to 0 Life!'];
     Object.assign(s, t);
     render(s); renderLegend();
     window.__shotReady = true;

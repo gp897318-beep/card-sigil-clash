@@ -2,6 +2,7 @@
 // audio and the ?shot= scenes, and exposes window.SIGIL for playtesting.
 
 import { newGame, startRound, commitPlayerCard, nextRound, resetGame } from './state.js';
+import { effectivePower } from './cards.js';
 import { pickRivalCard } from './ai.js';
 import { render, renderLegend, flash, clearCallouts } from './render.js';
 import { bindInput } from './input.js';
@@ -23,7 +24,8 @@ const api = {
   pick(i) {
     if (state.phase !== 'commit') return;
     if (i < 0 || i >= state.hand.length) return;
-    if (state.hand[i].cost > state.focus) return;
+    const broke = state.hand.every(c => c.cost > state.focus);
+    if (!broke && state.hand[i].cost > state.focus) return;
     state.selected = i;
     render(state);
   },
@@ -70,13 +72,20 @@ api.autoplay = function (strategy) {
       if (state.phase === 'title') { api.start(); }
       if (state.phase === 'over') { resolve({ winner: state.winner, turns: state.turns, youLife: state.youLife, rivalLife: state.rivalLife }); return; }
       if (state.phase === 'commit') {
+        // 'best' reads the hint: score each card by effective power against
+        // the rival's favoured sigil, minus a little for Focus cost.
+        // 'worst' plays the weakest affordable card.
+        const hintSigil = state.rivalCommit ? state.rivalCommit.card.sigil : null;
         let best = -1, bestScore = strategy === 'worst' ? Infinity : -Infinity;
         state.hand.forEach((c, i) => {
-          if (c.cost > state.focus) return;
-          const sc = c.value;
+          const broke = state.hand.every(x => x.cost > state.focus);
+          if (!broke && c.cost > state.focus) return;
+          let sc;
+          if (strategy === 'worst') sc = c.value;
+          else sc = effectivePower(c, hintSigil) - c.cost * 0.5;
           if (strategy === 'worst' ? sc < bestScore : sc > bestScore) { bestScore = sc; best = i; }
         });
-        if (best < 0) { // cannot afford anything: pass the round with the cheapest card anyway
+        if (best < 0) { // no card at all (empty hand): cannot happen in a real game
           resolve({ winner: state.winner, turns: state.turns, youLife: state.youLife, rivalLife: state.rivalLife, stuck: true });
           return;
         }

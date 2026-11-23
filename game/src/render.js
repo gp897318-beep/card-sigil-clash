@@ -18,12 +18,15 @@ export function cardHTML(card, opts) {
   if (o.faceDown) {
     return '<div class="' + cls.join(' ') + '"><div class="back">✦</div></div>';
   }
+  const rule = o.compact
+    ? sig.name + ' ' + sig.glyph + ' · Beats ' + SIGILS[sig.beats].name
+    : sig.name + ' ' + sig.glyph + ' · ' + sig.rule + '<br>Power ' + card.value + ' · Cost ◆' + card.cost;
   return '<div class="' + cls.join(' ') + '" data-card="' + card.id + '">' +
     '<div class="cost" title="Focus cost">◆' + card.cost + '</div>' +
     '<div class="sig sig-' + card.sigil + '" style="background:' + sig.color + '">' + sig.glyph + '</div>' +
     '<div class="val">' + card.value + '</div>' +
     '<div class="nm">' + card.name + '</div>' +
-    '<div class="rule">' + sig.name + ' ' + sig.glyph + ' · ' + sig.rule + '<br>Power ' + card.value + ' · Cost ◆' + card.cost + '</div>' +
+    '<div class="rule">' + rule + '</div>' +
     '</div>';
 }
 
@@ -37,7 +40,7 @@ export function renderLegend() {
     '<b>THE SIGIL WHEEL</b><br>Flame ▲ beats Gale ✦<br>Gale ✦ beats Stone ■<br>Stone ■ beats Tide ●<br>Tide ● beats Flame ▲<br><br>' +
     '<b>WIN A CLASH:</b> higher power deals the margin as damage.<br>' +
     '<b>3 WINS IN A ROW:</b> Sigil Burst +6 damage!<br>' +
-    '<b>FOCUS:</b> +1 each round, max 10. Cards cost ◆1–4.';
+    '<b>FOCUS:</b> +2 each round, max 10. Cards cost ◆1–4.';
 }
 
 export function render(s) {
@@ -108,11 +111,12 @@ export function render(s) {
     'Welcome to the arena.';
 
   // --- player hand ---
+  const broke = s.hand.length > 0 && s.hand.every(c => c.cost > s.focus);
   el('hand').innerHTML = s.hand.map((c, i) => {
-    const afford = c.cost <= s.focus && s.phase === 'commit';
+    const afford = (c.cost <= s.focus || broke) && s.phase === 'commit';
     return cardHTML(c, {
       playable: afford, selected: i === s.selected,
-      cant: !afford && s.phase === 'commit',
+      cant: !afford && s.phase === 'commit', compact: true,
     });
   }).join('');
   el('hand').querySelectorAll('.card').forEach((node, i) => {
@@ -124,7 +128,7 @@ export function render(s) {
 
   // --- commit button ---
   el('btnCommit').disabled = !(s.phase === 'commit' && s.selected >= 0 &&
-    s.hand[s.selected] && s.hand[s.selected].cost <= s.focus);
+    s.hand[s.selected] && (s.hand[s.selected].cost <= s.focus || broke));
 
   // --- screens ---
   el('titleScreen').classList.toggle('hidden', s.phase !== 'title');
@@ -145,7 +149,7 @@ export function render(s) {
 
 export function showCallouts(list) {
   el('callouts').innerHTML = list.map(c =>
-    '<div class="callout" style="left:' + c.x + 'px; top:' + c.y + 'px;">' + c.text + '</div>').join('');
+    '<div class="callout' + (c.up ? ' up' : '') + '" style="left:' + c.x + 'px; top:' + c.y + 'px;">' + c.text + '</div>').join('');
 }
 
 export function clearCallouts() { el('callouts').innerHTML = ''; }

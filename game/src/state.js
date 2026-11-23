@@ -10,6 +10,7 @@ export const HAND_SIZE = 6;
 export const MAX_FOCUS = 10;
 export const STREAK_FOR_BURST = 3;
 export const BURST_DAMAGE = 6;
+export const DAMAGE_CAP = 8; // clash damage (before a Burst) never exceeds 8
 
 export function newGame(rand) {
   const deck = shuffle(buildDeck(), rand);
@@ -19,7 +20,7 @@ export function newGame(rand) {
     round: 1,
     youLife: MAX_LIFE,
     rivalLife: MAX_LIFE,
-    focus: 3,
+    focus: 4,
     focusMax: MAX_FOCUS,
     deck, rivalDeck,
     discard: [], rivalDiscard: [],
@@ -88,13 +89,16 @@ export function canAfford(s, card) {
 }
 
 // Player commits a hand card to the arena, then the clash resolves.
+// Desperation rule: if NO card in hand is affordable, the cheapest card
+// may be committed for free, so a round can never soft-lock.
 export function commitPlayerCard(s, handIndex) {
   if (s.phase !== 'commit') return null;
   if (handIndex < 0 || handIndex >= s.hand.length) return null;
   const card = s.hand[handIndex];
-  if (!canAfford(s, card)) return null;
+  const broke = s.hand.every(c => c.cost > s.focus);
+  if (!broke && !canAfford(s, card)) return null;
   s.hand.splice(handIndex, 1);
-  s.focus -= card.cost;
+  s.focus = Math.max(0, s.focus - (broke ? 0 : card.cost));
   s.cardsPlayed++;
   s.youCommit = { card };
   s.selected = -1;
@@ -113,7 +117,7 @@ export function resolveClash(s) {
   if (youPow > foePow) { winner = 'you'; margin = youPow - foePow; bonus = youBonus ? 3 : 0; }
   else if (foePow > youPow) { winner = 'rival'; margin = foePow - youPow; bonus = foeBonus ? 3 : 0; }
   else { winner = 'draw'; margin = 0; }
-  let damage = winner === 'draw' ? 0 : Math.max(1, margin) + bonus;
+  let damage = winner === 'draw' ? 0 : Math.min(DAMAGE_CAP, Math.max(1, margin) + bonus);
   let burst = false;
   if (winner === 'you') {
     s.streakYou++; s.streakRival = 0;
@@ -150,7 +154,7 @@ export function resolveClash(s) {
 export function nextRound(s, pickRivalCard, rand) {
   if (s.phase === 'over') return;
   s.round++;
-  s.focus = Math.min(MAX_FOCUS, s.focus + 1);
+  s.focus = Math.min(MAX_FOCUS, s.focus + 2);
   drawUp(s, rand);
   drawUpRival(s, rand);
   startRound(s, pickRivalCard);
