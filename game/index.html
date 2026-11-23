@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIGIL CLASH — simultaneous-reveal card duel</title>
+<style>
+  :root{
+    --violet:#2a1650; --violet2:#3d2170; --gold:#f5c542; --gold2:#ffe08a;
+    --flame:#ff5a3c; --gale:#37c978; --stone:#c98f4e; --tide:#3fa9f5;
+    --ink:#f4efff; --mut:#c9b8ec; --panel:#241040; --panel2:#1a0b33;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; user-select:none;}
+  html,body{width:100%; height:100%; overflow:hidden;}
+  body{
+    background:radial-gradient(1000px 600px at 50% -10%, #5b2ea6 0%, var(--violet) 45%, #150829 100%);
+    color:var(--ink); font-family:Verdana, Geneva, sans-serif;
+  }
+  #app{width:1280px; height:800px; margin:0 auto; position:relative; padding:8px 10px;}
+  /* ---------- top bar ---------- */
+  #topbar{display:flex; align-items:center; gap:14px; height:58px;
+    background:linear-gradient(180deg,#3a1d6e,#241040); border:2px solid var(--gold);
+    border-radius:12px; padding:4px 14px;}
+  #topbar h1{font-size:26px; letter-spacing:2px; color:var(--gold2); text-shadow:0 0 14px #f5c54288; white-space:nowrap;}
+  #objective{font-size:12px; color:var(--mut); line-height:1.25; max-width:300px;}
+  .lifebox{display:flex; align-items:center; gap:6px; font-size:15px; font-weight:bold;}
+  .lifebox .heart{color:#ff4d6d; font-size:20px;}
+  .lifebox .num{font-size:22px;}
+  .lifebox.low .num{color:#ff5a5a; animation:pulse 1s infinite;}
+  @keyframes pulse{50%{opacity:.45;}}
+  #turnbox{font-size:14px; color:var(--gold2); font-weight:bold; white-space:nowrap;}
+  #focusbox{font-size:13px; white-space:nowrap;}
+  .pip{display:inline-block; width:12px; height:12px; border-radius:50%; margin:0 1px;
+    background:#7a5fb0; border:1px solid #b9a0e0;}
+  .pip.on{background:var(--gold); box-shadow:0 0 6px var(--gold);}
+  /* ---------- main columns ---------- */
+  #mid{display:flex; gap:10px; margin-top:8px; height:560px;}
+  #table{flex:1; position:relative; background:radial-gradient(ellipse at 50% 40%, #4a2a86 0%, #2a1650 60%, #1a0b33 100%);
+    border:2px solid #6a4aa8; border-radius:14px; overflow:hidden;}
+  #log{width:172px; background:var(--panel); border:2px solid #6a4aa8; border-radius:12px;
+    padding:8px; font-size:11px; line-height:1.5; overflow:hidden;}
+  #log h3{color:var(--gold2); font-size:12px; margin-bottom:6px; letter-spacing:1px;}
+  #log div{border-bottom:1px solid #ffffff18; padding:2px 0;}
+  #legend{width:196px; background:var(--panel); border:2px solid var(--gold); border-radius:12px; padding:8px;}
+  #legend h3{color:var(--gold2); font-size:13px; letter-spacing:1px; margin-bottom:6px;}
+  .sigrow{display:flex; align-items:center; gap:7px; font-size:12px; margin:5px 0;}
+  .sigicon{width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:bold; color:#fff; flex:none; border:2px solid #ffffff66;}
+  .sig-flame{background:var(--flame);} .sig-gale{background:var(--gale);}
+  .sig-stone{background:var(--stone);} .sig-tide{background:var(--tide);}
+  .wheel{margin-top:8px; font-size:11px; color:var(--mut); line-height:1.6; border-top:1px solid #ffffff22; padding-top:6px;}
+  .wheel b{color:var(--gold2);}
+  /* ---------- rival hand ---------- */
+  #rivalzone{padding:8px 10px 0; display:flex; align-items:center; gap:10px;}
+  #rivalzone .who{font-size:13px; font-weight:bold; color:#ffb3c2; width:118px; line-height:1.3;}
+  #rivalhand{display:flex; gap:6px;}
+  .mini{width:52px; height:74px; border-radius:7px; background:linear-gradient(160deg,#5b2ea6,#2a1650);
+    border:2px solid #8a63d2; display:flex; align-items:center; justify-content:center;
+    font-size:22px; color:var(--gold2);}
+  /* ---------- arena ---------- */
+  #arena{position:relative; height:252px; margin:6px 10px 0; border-radius:14px;
+    background:radial-gradient(ellipse at 50% 50%, #6b3fb322 0%, transparent 65%);
+    border:2px dashed #8a63d288;}
+  #arenaring{position:absolute; left:50%; top:50%; width:230px; height:230px; transform:translate(-50%,-50%);
+    border:3px solid var(--gold); border-radius:50%; opacity:.55;
+    box-shadow:0 0 30px #f5c54255, inset 0 0 30px #f5c54233;}
+  #arenaring::after{content:"✦ SIGIL ARENA ✦"; position:absolute; left:50%; top:-11px; transform:translateX(-50%);
+    background:#2a1650; padding:0 8px; font-size:11px; letter-spacing:2px; color:var(--gold2); white-space:nowrap;}
+  #hint{position:absolute; left:12px; top:10px; max-width:230px; background:#1a0b33ee; border:2px solid var(--gold);
+    border-radius:9px; padding:6px 9px; font-size:12.5px; line-height:1.35; z-index:5;}
+  #hint b{color:var(--gold2);}
+  #streak{position:absolute; right:12px; top:10px; width:200px; text-align:right; z-index:5;}
+  #streak .lbl{font-size:11px; letter-spacing:2px; color:var(--gold2);}
+  #streak .bar{height:14px; border:2px solid var(--gold); border-radius:7px; margin-top:3px; overflow:hidden; background:#1a0b33;}
+  #streak .fill{height:100%; width:0%; background:linear-gradient(90deg,#ff8a3c,#f5c542,#ffe08a); transition:width .4s;}
+  #streak.blaze .fill{animation:blaze .5s infinite alternate;}
+  @keyframes blaze{from{box-shadow:0 0 4px #f5c542;} to{box-shadow:0 0 18px #ffcf3c;}}
+  #streak .burst{font-size:12px; color:#ff9d5c; font-weight:bold; margin-top:2px;}
+  .arenacard{position:absolute; top:50%; width:118px; height:164px; transform:translateY(-50%);
+    transition:left .45s ease, transform .45s ease;}
+  #slotRival{left:calc(50% - 132px);}
+  #slotYou{left:calc(50% + 14px);}
+  .arenacard.midflip{animation:flipin .6s ease;}
+  @keyframes flipin{0%{transform:translateY(-50%) rotateY(90deg) scale(.8);} 60%{transform:translateY(-50%) rotateY(-12deg) scale(1.05);} 100%{transform:translateY(-50%) rotateY(0) scale(1);}}
+  #vs{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:30px; font-weight:bold;
+    color:var(--gold2); text-shadow:0 0 16px #f5c542; z-index:4;}
+  #dmg{position:absolute; left:50%; top:16px; transform:translateX(-50%); font-size:30px; font-weight:bold;
+    color:#ff6b5e; text-shadow:0 2px 0 #000, 0 0 18px #ff6b5e88; z-index:6; display:none;}
+  #dmg.show{display:block; animation:floatup 1.1s ease forwards;}
+  @keyframes floatup{0%{opacity:0; margin-top:14px;} 25%{opacity:1;} 100%{opacity:0; margin-top:-16px;}}
+  #phase{position:absolute; left:50%; bottom:8px; transform:translateX(-50%); font-size:14px; font-weight:bold;
+    color:var(--gold2); background:#1a0b33dd; border:1px solid var(--gold); border-radius:8px; padding:3px 12px; white-space:nowrap; z-index:5;}
+  /* ---------- cards ---------- */
+  .card{width:118px; height:164px; border-radius:10px; position:relative; cursor:pointer;
+    background:linear-gradient(170deg,#fdf6e3,#f3e2b8); color:#241040; border:3px solid #fff;
+    box-shadow:0 4px 10px #000a; transition:transform .18s ease, box-shadow .18s ease;}
+  .card .cost{position:absolute; left:5px; top:5px; width:30px; height:30px; border-radius:50%;
+    background:#7b2ff7; color:#fff; font-size:16px; font-weight:bold; display:flex; align-items:center; justify-content:center;
+    border:2px solid #fff; box-shadow:0 0 6px #7b2ff7;}
+  .card .sig{position:absolute; right:5px; top:5px; width:30px; height:30px; border-radius:7px;
+    color:#fff; font-size:18px; font-weight:bold; display:flex; align-items:center; justify-content:center; border:2px solid #ffffff88;}
+  .card .val{position:absolute; left:0; right:0; top:44px; text-align:center; font-size:46px; font-weight:bold; line-height:1;}
+  .card .nm{position:absolute; left:0; right:0; top:96px; text-align:center; font-size:12.5px; font-weight:bold;}
+  .card .rule{position:absolute; left:6px; right:6px; bottom:6px; text-align:center; font-size:10.5px; line-height:1.25; color:#4a2a6e;}
+  .card.face-down{background:linear-gradient(160deg,#5b2ea6,#2a1650); border-color:#8a63d2; cursor:default;}
+  .card.face-down .back{position:absolute; inset:8px; border:2px dashed #f5c54288; border-radius:7px;
+    display:flex; align-items:center; justify-content:center; font-size:34px; color:var(--gold2);}
+  .card.playable:hover{transform:translateY(-14px) scale(1.05); box-shadow:0 10px 22px #000c, 0 0 16px #f5c542aa;}
+  .card.selected{transform:translateY(-16px); outline:3px solid var(--gold); box-shadow:0 0 22px #f5c542cc;}
+  .card.cant{opacity:.55; cursor:not-allowed;}
+  .card.glow{box-shadow:0 0 26px #f5c542, 0 0 8px #fff; animation:cardglow .6s infinite alternate;}
+  @keyframes cardglow{from{box-shadow:0 0 12px #f5c542;} to{box-shadow:0 0 30px #ffe08a;}}
+  /* ---------- player hand ---------- */
+  #youzone{padding:6px 10px 0; display:flex; align-items:center; gap:10px;}
+  #youzone .who{font-size:13px; font-weight:bold; color:#b8f5d0; width:118px; line-height:1.3;}
+  #hand{display:flex; gap:8px;}
+  #hand .card{width:104px; height:148px;}
+  #hand .card .val{font-size:40px; top:40px;}
+  #hand .card .nm{top:88px;}
+  #hand .card .rule{font-size:10px;}
+  #hand .card .cost{width:27px; height:27px; font-size:14px;}
+  #hand .card .sig{width:27px; height:27px; font-size:16px;}
+  /* ---------- controls ---------- */
+  #controls{display:flex; align-items:center; gap:10px; margin-top:8px; height:52px;
+    background:#1a0b33; border:2px solid #6a4aa8; border-radius:12px; padding:6px 12px; font-size:12.5px;}
+  #controls .keys{color:var(--mut);}
+  button{font-family:inherit; font-size:14px; font-weight:bold; padding:8px 16px; border-radius:9px;
+    border:2px solid var(--gold); background:linear-gradient(180deg,#f5c542,#d99a17); color:#241040; cursor:pointer;}
+  button:hover{filter:brightness(1.12);}
+  button:disabled{opacity:.45; cursor:not-allowed;}
+  button.ghost{background:#2a1650; color:var(--gold2);}
+  /* ---------- callouts (cover) ---------- */
+  .callout{position:absolute; z-index:8; background:#fffbe8; color:#241040; font-size:12px; font-weight:bold;
+    border:2px solid var(--gold); border-radius:8px; padding:4px 8px; box-shadow:0 2px 8px #000a; max-width:190px; line-height:1.3;}
+  .callout::after{content:""; position:absolute; left:50%; bottom:-14px; width:2px; height:14px; background:var(--gold);}
+  /* ---------- overlays ---------- */
+  .overlay{position:absolute; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at 50% 40%, #3d2170ee 0%, #150829f2 100%); text-align:center; padding:20px;}
+  .overlay h1{font-size:64px; letter-spacing:4px; color:var(--gold2); text-shadow:0 0 30px #f5c54288;}
+  .overlay h2{font-size:20px; color:var(--ink); margin:10px 0 4px; font-weight:normal; max-width:640px; line-height:1.45;}
+  .overlay .big{font-size:88px; font-weight:bold; letter-spacing:6px;}
+  .overlay .big.win{color:#7dff9e; text-shadow:0 0 34px #37c978;}
+  .overlay .big.lose{color:#ff6b5e; text-shadow:0 0 34px #ff5a3c;}
+  .overlay .stats{font-size:15px; color:var(--mut); margin:12px 0; line-height:1.7;}
+  .overlay .stats b{color:var(--gold2);}
+  .howto{font-size:13.5px; color:var(--ink); background:#241040cc; border:2px solid #6a4aa8; border-radius:12px;
+    padding:12px 18px; margin:14px 0; line-height:1.75; text-align:left; max-width:620px;}
+  .howto b{color:var(--gold2);}
+  .hidden{display:none !important;}
+  #flash{position:absolute; inset:0; z-index:15; pointer-events:none; background:radial-gradient(circle at 50% 50%, #ffe08a55, transparent 60%); opacity:0;}
+  #flash.go{animation:flashgo .7s ease;}
+  @keyframes flashgo{0%{opacity:0;} 30%{opacity:1;} 100%{opacity:0;}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <h1>✦ SIGIL CLASH ✦</h1>
+    <div id="objective">OBJECTIVE: commit one card each round — higher sigil power wins the clash. First to drop the rival to 0 Life wins.</div>
+    <div class="lifebox" id="lifeYou"><span class="heart">♥</span><span class="num">30</span><span>YOU</span></div>
+    <div class="lifebox" id="lifeRival"><span class="heart">♥</span><span class="num">30</span><span>RIVAL</span></div>
+    <div id="turnbox">ROUND 1</div>
+    <div id="focusbox">FOCUS <span id="pips"></span></div>
+  </div>
+
+  <div id="mid">
+    <div id="log"><h3>⚔ CLASH LOG</h3><div id="loglines"></div></div>
+    <div id="table">
+      <div id="rivalzone">
+        <div class="who">👑 RIVAL<br><span id="rivalcount">6 cards</span></div>
+        <div id="rivalhand"></div>
+      </div>
+      <div id="arena">
+        <div id="arenaring"></div>
+        <div id="hint"></div>
+        <div id="streak"><div class="lbl">SIGIL STREAK</div><div class="bar"><div class="fill" id="streakfill"></div></div><div class="burst" id="burstline"></div></div>
+        <div class="arenacard" id="slotRival"></div>
+        <div id="vs">VS</div>
+        <div class="arenacard" id="slotYou"></div>
+        <div id="dmg"></div>
+        <div id="phase">Commit a card to the arena — then reveal together!</div>
+      </div>
+      <div id="youzone">
+        <div class="who">🧙 YOU<br><span id="youcount">6 cards</span></div>
+        <div id="hand"></div>
+      </div>
+      <div id="callouts"></div>
+    </div>
+    <div id="legend">
+      <h3>📖 SIGIL LEGEND</h3>
+      <div id="legendrows"></div>
+      <div class="wheel" id="wheelbox"></div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button id="btnCommit">⚔ COMMIT CARD</button>
+    <button id="btnNew" class="ghost">↻ NEW GAME (R)</button>
+    <button id="btnMute" class="ghost">🔊 SOUND (M)</button>
+    <span class="keys">Click a card or press 1–6 to pick it · Enter/Space to commit · R restart · M mute</span>
+  </div>
+
+  <div id="flash"></div>
+  <div id="titleScreen" class="overlay">
+    <h1>✦ SIGIL CLASH ✦</h1>
+    <h2>A simultaneous-reveal card duel. Both sides commit one card face-down to the arena — then flip together. Higher power wins the clash and deals the damage.</h2>
+    <div class="howto">
+      <b>HOW TO PLAY</b><br>
+      1 · Each round, pick ONE card from your hand and commit it to the arena.<br>
+      2 · The rival commits too — its hint tells you which sigil it favours. Counter it!<br>
+      3 · <b>Sigil wheel:</b> Flame beats Gale, Gale beats Stone, Stone beats Tide, Tide beats Flame (+3 power).<br>
+      4 · Winner deals damage = margin + sigil bonus. Win 3 clashes in a row for a <b>Sigil Burst +6</b>.<br>
+      5 · Cards cost Focus (you gain +1 each round). First to 0 Life loses.
+    </div>
+    <button id="btnStart" style="font-size:20px; padding:12px 34px;">▶ CLICK TO BEGIN</button>
+    <div style="margin-top:10px; font-size:12px; color:var(--mut);">30 Life each · Deck of 30 · Hand of 6 · Keys 1–6, Enter, R, M</div>
+  </div>
+  <div id="endScreen" class="overlay hidden">
+    <div class="big" id="endTitle">VICTORY</div>
+    <div class="stats" id="endStats"></div>
+    <button id="btnAgain" style="font-size:18px; padding:10px 28px;">↻ PLAY AGAIN (R)</button>
+  </div>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
